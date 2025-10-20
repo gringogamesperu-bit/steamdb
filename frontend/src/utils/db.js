@@ -25,7 +25,8 @@ export const saveAppData = async (data) => {
 };
 
 export const fetchSteamAppList = async () => {
-  const response = await fetch('https://api.steampowered.com/ISteamApps/GetAppList/v2/');
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const response = await fetch(`${BACKEND_URL}/api/steam/applist`);
   if (!response.ok) {
     throw new Error('Failed to fetch Steam AppList');
   }
