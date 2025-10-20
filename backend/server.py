@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 import uuid
 from datetime import datetime, timezone
+import httpx
 
 
 ROOT_DIR = Path(__file__).parent
@@ -41,6 +42,18 @@ class StatusCheckCreate(BaseModel):
 @api_router.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@api_router.get("/steam/applist")
+async def get_steam_applist():
+    """Proxy endpoint to fetch Steam AppList and avoid CORS issues"""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get('https://api.steampowered.com/ISteamApps/GetAppList/v2/')
+            response.raise_for_status()
+            data = response.json()
+            return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Steam AppList: {str(e)}")
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
